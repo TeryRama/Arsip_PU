@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Daftar Surat Masuk Dihapus</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+  <div class="container py-5">
+    <h2 class="mb-4 text-center">📁 Daftar Surat Masuk Dihapus</h2>
+
+    <table class="table table-bordered table-striped">
+      <thead class="table-dark">
+        <tr>
+          <th>No</th>
+          <th>Nomor Surat</th>
+          <th>Hal</th>
+          <th>Dari</th>
+          <th>Ditujukan Kepada</th>
+          <th>Tanggal Surat</th>
+          <th>Diterima</th>
+          <th>Catatan</th>
+          <th>File</th>
+          <th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% suratList.forEach((surat, index) => { %>
+          <tr>
+            <td><%= index + 1 %></td>
+            <td><%= surat.nomor_surat %></td>
+            <td><%= surat.hal %></td>
+            <td><%= surat.dari %></td>
+            <td><%= surat.ditujukan_kepada %></td>
+            <td><%= surat.tanggal_surat.toISOString().slice(0, 10) %></td>
+            <td><%= surat.tanggal_diterima.toISOString().slice(0, 10) %></td>
+            <td><%= surat.catatan || '-' %></td>
+            <td class="text-center">
+             <a class="btn btn-sm btn-outline-danger d-flex align-items-center gap-1" 
+                href="/<%= surat.nama_file %>" target="_blank"  data-bs-toggle="tooltip" 
+                data-bs-placement="top" title="Lihat file PDF">
+                <i class="bi bi-file-earmark-pdf-fill"></i> PDF
+            </a>
+            </td>
+            <td>
+                 <a href="/edit/<%= surat.id %>" class="btn btn-sm btn-warning" data-bs-toggle="tooltip" title="Edit Surat">✏️</a>
+                  <form action="/restore/<%= surat.id %>" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin memulihkan data?')">
+                    <button type="button" class="btn btn-sm btn-success" onclick="restoreSurat('<%= surat.id %>')" data-bs-toggle="tooltip" title="Pulihkan Data">
+                      ♻️
+                    </button>
+                  </form>
+                <button class="btn btn-sm btn-outline-danger" onclick="hapusPermanen('<%= surat.id %>')" title="Hapus Permanen 🗑️">🗑️</button>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+
+    <div class="text-center mt-4">
+      <a href="/user" class="btn btn-outline-secondary">⬅️ Kembali ke User</a>
+    </div>
+  </div>
+
+  <script>
+  const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+  const tooltipList = [...tooltipTriggerList].map(el => new bootstrap.Tooltip(el))
+  </script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+  function hapusSurat(id) {
+    Swal.fire({
+      title: 'Yakin ingin menghapus?',
+      text: "Data akan disembunyikan dari daftar.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Ya, hapus!',
+      cancelButtonText: 'Batal'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        fetch(`/delete/${id}`, {
+          method: 'POST'
+        })
+        .then(res => {
+          if (res.ok) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Berhasil!',
+              text: 'Data berhasil dihapus.',
+              timer: 2000,
+              showConfirmButton: false
+            }).then(() => {
+              location.reload();
+            });
+          } else {
+            throw new Error('Gagal menghapus data');
+          }
+        })
+        .catch(() => {
+          Swal.fire({
+            icon: 'error',
+            title: 'Gagal!',
+            text: 'Data gagal dihapus.'
+          });
+        });
+      }
+    });
+  }
+</script>
+<script>
+  function restoreSurat(id) {
+    Swal.fire({
+      title: 'Pulihkan Data?',
+      text: "Data akan dikembalikan ke daftar surat masuk.",
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Ya, pulihkan!',
+      cancelButtonText: 'Batal'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        fetch(`/restore/${id}`, {
+          method: 'POST'
+        })
+        .then(res => {
+          if (res.ok) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Dipulihkan!',
+              text: 'Data berhasil dipulihkan.',
+              timer: 2000,
+              showConfirmButton: false
+            }).then(() => {
+              location.reload();
+            });
+          } else {
+            throw new Error('Gagal restore data');
+          }
+        })
+        .catch(() => {
+          Swal.fire({
+            icon: 'error',
+            title: 'Gagal!',
+            text: 'Data gagal dipulihkan.'
+          });
+        });
+      }
+    });
+  }
+</script>
+
+<script>
+  function hapusPermanen(id) {
+    Swal.fire({
+      title: 'Yakin ingin menghapus permanen?',
+      text: "File dan data akan hilang selamanya!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Ya, hapus!',
+      cancelButtonText: 'Batal'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        fetch(`/delete-permanent/${id}`, {
+          method: 'POST'
+        })
+        .then(res => {
+          if (res.ok) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Berhasil!',
+              text: 'Data berhasil dihapus permanen.',
+              timer: 2000,
+              showConfirmButton: false
+            }).then(() => {
+              location.reload();
+            });
+          } else {
+            throw new Error('Gagal menghapus');
+          }
+        })
+        .catch(() => {
+          Swal.fire({
+            icon: 'error',
+            title: 'Gagal!',
+            text: 'Data gagal dihapus permanen.'
+          });
+        });
+      }
+    });
+  }
+</script>
+
+</body>
+</html>

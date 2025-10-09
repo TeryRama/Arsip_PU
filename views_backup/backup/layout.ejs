@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title><%= title %> | Arsip Surat</title>
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+
+    <!-- Favicon-->
+    <link rel="icon" href="/adminbsb/favicon.ico" type="image/x-icon">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css?family=Roboto:400,700&subset=latin,cyrillic-ext" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <!-- Bootstrap Core Css -->
+    <link href="/adminbsb/plugins/bootstrap/css/bootstrap.css" rel="stylesheet">
+    <link href="/adminbsb/plugins/node-waves/waves.css" rel="stylesheet" />
+    <link href="/adminbsb/plugins/animate-css/animate.css" rel="stylesheet" />
+    <link href="/adminbsb/plugins/morrisjs/morris.css" rel="stylesheet" />
+
+    <!-- Custom Css -->
+    <link href="/adminbsb/css/style.css" rel="stylesheet">
+    <link href="/adminbsb/css/themes/all-themes.css" rel="stylesheet" />
+</head>
+<body class="theme-red">
+
+    <!-- Loader -->
+    <div class="page-loader-wrapper">
+        <div class="loader">
+            <div class="preloader">
+                <div class="spinner-layer pl-red">
+                    <div class="circle-clipper left"><div class="circle"></div></div>
+                    <div class="circle-clipper right"><div class="circle"></div></div>
+                </div>
+            </div>
+            <p>Harap tunggu...</p>
+        </div>
+    </div>
+
+    <!-- Overlay -->
+    <div class="overlay"></div>
+
+    <!-- Top Bar -->
+    <nav class="navbar">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <a class="navbar-brand" href="/home">📑 Arsip Surat</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sidebar -->
+    <aside id="leftsidebar" class="sidebar">
+        <div class="menu">
+            <ul class="list">
+                <li class="header">MENU UTAMA</li>
+                <li><a href="/home"><i class="material-icons">home</i><span>Dashboard</span></a></li>
+                <li><a href="/surat"><i class="material-icons">folder</i><span>Arsip Surat</span></a></li>
+                <li><a href="/logout"><i class="material-icons">exit_to_app</i><span>Keluar</span></a></li>
+            </ul>
+        </div>
+    </aside>
+
+    <!-- Content -->
+    <section class="content">
+        <div class="container-fluid">
+            <%- body %>
+        </div>
+    </section>
+
+    <!-- Scripts -->
+    <script src="/adminbsb/plugins/jquery/jquery.min.js"></script>
+    <script src="/adminbsb/plugins/bootstrap/js/bootstrap.js"></script>
+    <script src="/adminbsb/plugins/bootstrap-select/js/bootstrap-select.js"></script>
+    <script src="/adminbsb/plugins/jquery-slimscroll/jquery.slimscroll.js"></script>
+    <script src="/adminbsb/plugins/node-waves/waves.js"></script>
+    <script src="/adminbsb/plugins/raphael/raphael.min.js"></script>
+    <script src="/adminbsb/plugins/morrisjs/morris.js"></script>
+    <script src="/adminbsb/js/admin.js"></script>
+    <script src="/adminbsb/js/demo.js"></script>
+</body>
+</html>

@@ -1,105 +1,65 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-  <meta charset="UTF-8">
-  <title>Admin - Upload Surat</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<div class="container py-5">
+  <h2 class="mb-4 text-center">📤 Upload Surat Masuk (PDF)</h2>
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-
-</head>
-<body class="bg-light">
-  <div class="container py-5">
-    <h2 class="mb-4 text-center">📤 Upload Surat Masuk (PDF)</h2>
-
-    <div class="card shadow-sm">
+  <div class="card shadow-sm">
     <div class="card-body">
-        <form id="uploadForm" enctype="multipart/form-data">
+      <form id="uploadForm" action="/upload" method="POST" enctype="multipart/form-data">
         <div class="mb-3">
-            <label for="nomorSurat" class="form-label">📄 Nomor Surat</label>
-            <input type="text" class="form-control" id="nomorSurat" name="nomor_surat" required>
+          <label for="nomorSurat" class="form-label">Nomor Surat</label>
+          <input type="text" class="form-control" id="nomorSurat" name="nomor_surat" required>
         </div>
 
         <div class="mb-3">
-            <label for="hal" class="form-label">📌 Hal</label>
-            <input type="text" class="form-control" id="hal" name="hal" required>
+          <label for="hal" class="form-label">Hal</label>
+          <input type="text" class="form-control" id="hal" name="hal" required>
         </div>
 
         <div class="mb-3">
-            <label for="dari" class="form-label">🏢 Surat Dari</label>
-            <input type="text" class="form-control" id="dari" name="dari" required>
+          <label for="dari" class="form-label">Surat Dari</label>
+          <input type="text" class="form-control" id="dari" name="dari" required>
         </div>
 
         <div class="mb-3">
-            <label for="tanggalSurat" class="form-label">📅 Tanggal Surat</label>
-            <input type="date" class="form-control" id="tanggalSurat" name="tanggal_surat" required>
+          <label for="ditujukan_kepada" class="form-label">Ditujukan Kepada</label>
+          <input type="text" class="form-control" id="ditujukan_kepada" name="ditujukan_kepada" required>
         </div>
 
         <div class="mb-3">
-            <label for="tanggalDiterima" class="form-label">📥 Diterima Tanggal</label>
-            <input type="date" class="form-control" id="tanggalDiterima" name="tanggal_diterima" required>
+          <label for="tanggalSurat" class="form-label">Tanggal Surat</label>
+          <input type="date" class="form-control" id="tanggalSurat" name="tanggal_surat" required>
         </div>
 
         <div class="mb-3">
-            <label for="catatan" class="form-label">📝 Catatan</label>
-            <textarea class="form-control" id="catatan" name="catatan" rows="3"></textarea>
+          <label for="tanggalDiterima" class="form-label">Tanggal Diterima</label>
+          <input type="date" class="form-control" id="tanggalDiterima" name="tanggal_diterima" required>
         </div>
 
         <div class="mb-3">
-            <label for="pdf" class="form-label">📎 Upload PDF</label>
-            <input class="form-control" type="file" id="pdf" name="pdf" accept="application/pdf" required>
+          <label class="form-label">Jenis Surat</label>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="jenis_surat" id="Masuk" value="Surat Masuk" checked>
+            <label class="form-check-label" for="Masuk">Surat Masuk</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="jenis_surat" id="Keluar" value="Surat Keluar">
+            <label class="form-check-label" for="Keluar">Surat Keluar</label>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label for="catatan" class="form-label">Catatan</label>
+          <textarea class="form-control" id="catatan" name="catatan" rows="3"></textarea>
+        </div>
+
+        <div class="mb-3">
+          <label for="file" class="form-label">Upload PDF</label>
+          <input class="form-control" type="file" id="file" name="file" accept="application/pdf" required>
         </div>
 
         <div class="d-grid">
-            <button type="submit" class="btn btn-success">
-            <i class="bi bi-upload"></i> Upload Surat
-            </button>
+          <button type="submit" class="btn btn-success">Upload Surat</button>
         </div>
-        </form>
-    </div>
-    </div>
-
- <div class="text-center mt-4">
-      <a href="/user" class="btn btn-outline-secondary">Lihat Halaman User</a>
+      </form>
     </div>
   </div>
-
-  <script>
-  $('#uploadForm').on('submit', function (e) {
-    e.preventDefault();
-
-    const formData = new FormData(this);
-
-    $.ajax({
-      url: '/upload',
-      type: 'POST',
-      data: formData,
-      contentType: false,
-      processData: false,
-      success: function () {
-        Swal.fire({
-          icon: 'success',
-          title: 'Upload Berhasil!',
-          text: 'Surat berhasil disimpan ke server.',
-          confirmButtonText: 'OK',
-          timer: 2000
-        });
-
-        // Reset form
-        $('#uploadForm')[0].reset();
-      },
-      error: function () {
-        Swal.fire({
-          icon: 'error',
-          title: 'Gagal Upload',
-          text: 'Terjadi kesalahan saat mengupload file.',
-          confirmButtonText: 'Coba Lagi'
-        });
-      }
-    });
-  });
-</script>
-
-</body>
-</html>
+</div>

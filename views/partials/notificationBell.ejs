@@ -1,0 +1,131 @@
+<!-- views/partials/notificationBell.ejs -->
+<style>
+  /* 🔔 Styling tambahan notifikasi */
+  #notifDropdown .badge-notif { 
+    position: absolute; 
+    top: -6px; 
+    right: -6px; 
+    font-size:0.65rem; 
+  }
+  .notif-unread { 
+    background:#eef9ff; 
+    font-weight:600; 
+  }
+  .notif-time { 
+    font-size:0.75rem; 
+    color:#666; 
+  }
+  .notif-message {
+    font-size: 0.8rem;           /* teks kecil */
+    white-space: nowrap;         /* biar satu baris */
+    overflow: hidden;            /* sembunyikan kelebihan */
+    text-overflow: ellipsis;     /* kasih ... */
+    max-width: 230px;            /* batasi panjang */
+    display: inline-block;
+    vertical-align: middle;
+  }
+  @media (max-width:576px){
+    #notifList { min-width:260px; }
+  }
+</style>
+
+<div class="nav-item dropdown ms-3" id="notifDropdown">
+  <a class="nav-link position-relative" href="#" id="notifToggle" data-bs-toggle="dropdown" aria-expanded="false">
+    <i class="bi bi-bell" style="font-size:1.15rem"></i>
+    <span id="notifCount" class="badge bg-danger rounded-pill badge-notif">
+      <%= typeof unreadCount !== 'undefined' ? unreadCount : '' %>
+    </span>
+  </a>
+
+  <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notifToggle" 
+      id="notifList" style="min-width:320px; max-width:360px;">
+    <li class="dropdown-header">Notifikasi</li>
+    <li><hr class="dropdown-divider"></li>
+    <li id="notifItems">
+      <div class="px-3 py-2 text-muted">Memuat...</div>
+    </li>
+    <li><hr class="dropdown-divider"></li>
+    <li class="px-2">
+      <button id="markAllReadBtn" class="btn btn-sm btn-outline-primary w-100">Tandai semua dibaca</button>
+      <a href="/notifications" class="btn btn-sm btn-link w-100 mt-2">Lihat semua notifikasi</a>
+    </li>
+  </ul>
+</div>
+
+<script>
+  // 🔄 Ambil notifikasi dari backend
+  async function fetchNotifications() {
+    try {
+      const res = await fetch('/notifications/data', { 
+        headers: { 'X-Requested-With': 'XMLHttpRequest' } 
+      });
+      if (!res.ok) throw new Error('Gagal ambil notif');
+      const json = await res.json();
+
+      const list = json.notifications || [];
+      const count = json.unreadCount || 0;
+
+      // Update badge count
+      document.getElementById('notifCount').textContent = count > 0 ? count : '';
+
+      const container = document.getElementById('notifItems');
+      if (!list.length) {
+        container.innerHTML = '<div class="px-3 py-2 text-muted">Tidak ada notifikasi</div>';
+        return;
+      }
+
+      container.innerHTML = '';
+      list.slice(0,8).forEach(n => {
+        const a = document.createElement('a');
+        a.href = n.url || '#';
+        a.className = 'dropdown-item d-flex align-items-start ' + (n.is_read ? '' : 'notif-unread');
+        a.dataset.id = n.id;
+        a.innerHTML = `
+          <div class="flex-grow-1">
+            <div class="small notif-time">${new Date(n.created_at).toLocaleString()}</div>
+            <div class="notif-message" data-bs-toggle="tooltip" data-bs-placement="left" title="${n.message}">
+              ${n.message}
+            </div>
+          </div>
+          ${n.is_read ? '' : '<span class="badge bg-primary ms-2">baru</span>'}
+        `;
+
+        // Klik notifikasi → tandai sudah dibaca + redirect kalau ada url
+        a.addEventListener('click', async (e) => {
+          e.preventDefault();
+          await markAsRead(n.id);
+          if (n.url) window.location.href = n.url;
+        });
+
+        container.appendChild(a);
+      });
+
+      // ✅ Inisialisasi ulang tooltip Bootstrap setelah render
+      const tooltipTriggerList = [].slice.call(container.querySelectorAll('[data-bs-toggle="tooltip"]'))
+      tooltipTriggerList.map(el => new bootstrap.Tooltip(el))
+
+    } catch (err) {
+      console.error('Notif error:', err);
+    }
+  }
+
+  // ✅ Tandai 1 notifikasi sudah dibaca
+  async function markAsRead(id){
+    try {
+      await fetch(`/notifications/mark-read/${id}`, { method: 'POST' });
+      await fetchNotifications();
+    } catch(e){ console.warn(e); }
+  }
+
+  // ✅ Tandai semua sudah dibaca
+  document.getElementById('markAllReadBtn').addEventListener('click', async () => {
+    try {
+      await fetch('/notifications/mark-all-read', { method: 'POST' });
+      await fetchNotifications();
+    } catch(e){ console.warn(e); }
+  });
+
+  // 🔔 Initial load + refresh setiap 15s
+  fetchNotifications();
+  setInterval(fetchNotifications, 15000);
+</script>

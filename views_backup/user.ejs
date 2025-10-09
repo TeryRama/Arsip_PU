@@ -1,0 +1,87 @@
+<!-- views/user.ejs -->
+<div class="container py-4">
+  <h2 class="mb-4">📁 Daftar Surat Masuk</h2>
+
+  <div class="row mb-4">
+    <div class="col-12 col-md-6 mx-auto">
+      <input type="text" id="searchInput" class="form-control" placeholder="Cari surat..." />
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>#</th><th>No Surat</th><th>Hal</th><th>Dari</th><th>Ditujukan</th><th>Tanggal</th><th>File</th><th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody id="suratBody">
+        <% if (suratList && suratList.length) { %>
+          <% suratList.forEach(function(surat, i){ %>
+            <tr>
+              <td><%= i+1 %></td>
+              <td><%= surat.nomor_surat %></td>
+              <td><%= surat.hal %></td>
+              <td><%= surat.dari %></td>
+              <td><%= surat.ditujukan_kepada %></td>
+              <td><%= surat.tanggal_surat ? surat.tanggal_surat.toISOString().slice(0,10) : '' %></td>
+              <td>
+                <% if (surat.nama_file) { %>
+                  <a class="btn btn-sm btn-outline-danger" href="/uploads/<%= surat.nama_file %>" target="_blank">PDF</a>
+                <% } else { %>-<% } %>
+              </td>
+              <td>
+                <a href="/edit/<%= surat.id %>" class="btn btn-warning btn-sm">✏️</a>
+                <form action="/hapus/<%= surat.id %>" method="POST" style="display:inline">
+                  <button class="btn btn-danger btn-sm">🗑️</button>
+                </form>
+              </td>
+            </tr>
+          <% }) %>
+        <% } else { %>
+          <tr><td colspan="8" class="text-center">Tidak ada data</td></tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  const searchInput = document.getElementById('searchInput');
+  searchInput.addEventListener('input', function() {
+    const q = this.value;
+    fetch(`/user?q=${encodeURIComponent(q)}`, { headers:{ 'X-Requested-With':'XMLHttpRequest' } })
+      .then(r => r.json())
+      .then(data => {
+        const t = document.getElementById('suratBody');
+        t.innerHTML = '';
+        if (!data.length) {
+          t.innerHTML = '<tr><td colspan="8" class="text-center">Tidak ada data</td></tr>';
+          return;
+        }
+        data.forEach((surat, idx) => {
+          const row = `<tr>
+            <td>${idx+1}</td>
+            <td>${surat.nomor_surat}</td>
+            <td>${surat.hal}</td>
+            <td>${surat.dari}</td>
+            <td>${surat.ditujukan_kepada}</td>
+            <td>${surat.tanggal_surat ? surat.tanggal_surat.slice(0,10) : ''}</td>
+            <td>${surat.nama_file ? `<a class="btn btn-sm btn-outline-danger" href="/uploads/${surat.nama_file}" target="_blank">PDF</a>` : '-'}</td>
+            <td>
+              <a href="/edit/${surat.id}" class="btn btn-warning btn-sm">✏️</a>
+              <button onclick="hapusSurat('${surat.id}')" class="btn btn-danger btn-sm">🗑️</button>
+            </td>
+          </tr>`;
+          t.insertAdjacentHTML('beforeend', row);
+        });
+      });
+  });
+
+  function hapusSurat(id){
+    if (!confirm('Hapus surat ini?')) return;
+    fetch('/hapus/' + id, { method: 'POST' })
+      .then(() => location.reload())
+      .catch(()=> alert('Gagal menghapus'));
+  }
+</script>

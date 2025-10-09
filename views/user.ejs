@@ -1,65 +1,86 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-  <meta charset="UTF-8">
-  <title>Daftar Surat Masuk</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-</head>
-<body class="bg-light">
-  <div class="container py-5">
-    <h2 class="mb-4 text-center">📁 Daftar Surat Masuk</h2>
+<div class="container py-4">
+  <h2 class="mb-4">📁 Daftar Surat Masuk</h2>
 
-    <table class="table table-bordered table-striped">
-      <thead class="table-dark">
-        <tr>
-          <th>No</th>
-          <th>Nomor Surat</th>
-          <th>Hal</th>
-          <th>Dari</th>
-          <th>Tanggal Surat</th>
-          <th>Diterima</th>
-          <th>Catatan</th>
-          <th>File</th>
-          <th>Aksi</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% suratList.forEach((surat, index) => { %>
-          <tr>
-            <td><%= index + 1 %></td>
-            <td><%= surat.nomor_surat %></td>
-            <td><%= surat.hal %></td>
-            <td><%= surat.dari %></td>
-            <td><%= surat.tanggal_surat.toISOString().slice(0, 10) %></td>
-            <td><%= surat.tanggal_diterima.toISOString().slice(0, 10) %></td>
-            <td><%= surat.catatan || '-' %></td>
-            <td class="text-center">
-             <a class="btn btn-sm btn-outline-danger d-flex align-items-center gap-1" 
-                href="/<%= surat.nama_file %>" target="_blank"  data-bs-toggle="tooltip" 
-                data-bs-placement="top" title="Lihat file PDF">
-                <i class="bi bi-file-earmark-pdf-fill"></i> PDF
-            </a>
-            </td>
-            <td>
-                 <a href="/edit/<%= surat.id %>" class="btn btn-sm btn-warning" data-bs-toggle="tooltip" title="Edit Surat">✏️</a>
-                <form action="/delete/<%= surat.id %>" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin hapus?')">
-                    <button type="submit" class="btn btn-sm btn-secondary" data-bs-toggle="tooltip" title="Hapus Surat">🗑️</button>
-                </form>
-            </td>
-          </tr>
-        <% }) %>
-      </tbody>
-    </table>
-
-    <div class="text-center mt-4">
-      <a href="/admin" class="btn btn-outline-secondary">⬅️ Kembali ke Admin</a>
+  <div class="row mb-4">
+    <div class="col-12 col-md-6 mx-auto">
+      <input type="text" id="searchInput" class="form-control" placeholder="Cari surat..." value="<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>" />
     </div>
   </div>
 
-  <script>
-  const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
-  const tooltipList = [...tooltipTriggerList].map(el => new bootstrap.Tooltip(el))
+  <div class="table-responsive">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>#</th><th>No Surat</th><th>Hal</th><th>Dari</th><th>Ditujukan</th><th>Tanggal</th><th>File</th><th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody id="suratBody">
+        <% if (suratList && suratList.length) { %>
+          <% suratList.forEach(function(surat, i){ %>
+            <tr>
+              <td><%= i+1 %></td>
+              <td><%= surat.nomor_surat %></td>
+              <td><%= surat.hal %></td>
+              <td><%= surat.dari %></td>
+              <td><%= surat.ditujukan_kepada %></td>
+              <td><%= surat.tanggal_surat ? surat.tanggal_surat.toISOString().slice(0,10) : '' %></td>
+              <td>
+                <% if (surat.nama_file) { %>
+                  <a class="btn btn-sm btn-outline-danger" href="/uploads/<%= surat.nama_file %>" target="_blank">PDF</a>
+                <% } else { %>-<% } %>
+              </td>
+              <td>
+                <a href="/edit/<%= surat.id %>" class="btn btn-warning btn-sm">✏️</a>
+                <form action="/hapus/<%= surat.id %>" method="POST" style="display:inline">
+                  <button class="btn btn-danger btn-sm">🗑️</button>
+                </form>
+              </td>
+            </tr>
+          <% }) %>
+        <% } else { %>
+          <tr><td colspan="8" class="text-center">Tidak ada data</td></tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  const searchInput = document.getElementById('searchInput');
+  searchInput.addEventListener('input', function() {
+    const q = this.value;
+    fetch(`/user?q=${encodeURIComponent(q)}`, { headers:{ 'X-Requested-With':'XMLHttpRequest' } })
+      .then(r => r.json())
+      .then(data => {
+        const t = document.getElementById('suratBody');
+        t.innerHTML = '';
+        if (!data.length) {
+          t.innerHTML = '<tr><td colspan="8" class="text-center">Tidak ada data</td></tr>';
+          return;
+        }
+        data.forEach((surat, idx) => {
+          const row = `<tr>
+            <td>${idx+1}</td>
+            <td>${surat.nomor_surat}</td>
+            <td>${surat.hal}</td>
+            <td>${surat.dari}</td>
+            <td>${surat.ditujukan_kepada}</td>
+            <td>${surat.tanggal_surat ? surat.tanggal_surat.slice(0,10) : ''}</td>
+            <td>${surat.nama_file ? `<a class="btn btn-sm btn-outline-danger" href="/uploads/${surat.nama_file}" target="_blank">PDF</a>` : '-'}</td>
+            <td>
+              <a href="/edit/${surat.id}" class="btn btn-warning btn-sm">✏️</a>
+              <button onclick="hapusSurat('${surat.id}')" class="btn btn-danger btn-sm">🗑️</button>
+            </td>
+          </tr>`;
+          t.insertAdjacentHTML('beforeend', row);
+        });
+      });
+  });
+
+  function hapusSurat(id){
+    if (!confirm('Hapus surat ini?')) return;
+    fetch('/hapus/' + id, { method: 'POST' })
+      .then(() => location.reload())
+      .catch(()=> alert('Gagal menghapus'));
+  }
 </script>
-</body>
-</html>

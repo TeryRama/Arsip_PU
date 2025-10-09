@@ -1,0 +1,195 @@
+<div class="container py-4">
+  <h2 class="mb-4">📨 Daftar Surat</h2>
+
+    <!-- Row filter dan pencarian -->
+  <div class="row mb-4 align-items-center">
+    <div class="col-12 col-md-3 mb-2 mb-md-0">
+      <!-- Dropdown filter jumlah data -->
+      <select id="limitSelect" class="form-select">
+        <option value="5" <%= limit == 5 ? 'selected' : '' %>>5 Data</option>
+        <option value="20" <%= limit == 20 ? 'selected' : '' %>>20 Data</option>
+        <option value="50" <%= limit == 50 ? 'selected' : '' %>>50 Data</option>
+        <option value="100" <%= limit == 100 ? 'selected' : '' %>>100 Data</option>
+      </select>
+    </div>
+    <div class="col-12 col-md-6 mx-auto">
+      <!-- Input pencarian -->
+      <input type="text" id="searchInput" class="form-control"
+        placeholder="Cari surat..."
+        value="<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>" />
+    </div>
+  </div>
+  <!-- Tabel responsive -->
+  <div class="table-responsive">
+    <table id="suratTable" class="table table-striped table-bordered align-middle">
+      <thead class="table-dark">
+        <tr>          
+          <th data-col="0"># <span class="sort-icon"></span></th>
+          <th data-col="1">No Surat <span class="sort-icon"></span></th>
+          <th data-col="2">Hal <span class="sort-icon"></span></th>
+          <th data-col="3">Dari <span class="sort-icon"></span></th>
+          <th data-col="4">Ditujukan <span class="sort-icon"></span></th>
+          <th data-col="5">Tgl Surat <span class="sort-icon"></span></th>
+          <th data-col="6">File</th>
+            <% if (user.role === 'admin') { %>
+            <th>Aksi</th> 
+            <% } %>
+        </tr>
+      </thead>
+      <tbody id="suratBody">
+        <% if (surat && surat.length) { %>
+          <% surat.forEach(function(s, i){ %>
+            <tr>
+              <td><%= (currentPage - 1) * 10 + i + 1 %></td>
+              <td><%= s.nomor_surat %></td>
+              <td><%= s.hal %></td>
+              <td><%= s.dari %></td>
+              <td><%= s.nama_lengkap %></td>
+              <td><%= s.tanggal_surat ? new Date(s.tanggal_surat).toISOString().slice(0,10) : '' %></td>
+              <td>
+                <% if (s.nama_file) { %>
+                  <a class="btn btn-sm btn-outline-danger" href="/uploads/<%= s.nama_file %>" target="_blank">PDF</a>
+                <% } else { %>-<% } %>
+              </td>
+                <% if (user && user.role === 'admin') { %>
+              <td>
+                <a href="/surat/edit/<%= s.id %>" class="btn btn-warning btn-sm">✏️</a>
+                <form action="/surat/hapus/<%= s.id %>" method="POST" style="display:inline-block; margin:0; padding:0;">
+                  <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Yakin hapus data ini?')">🗑️</button>
+                </form>
+              </td>
+              <% } %>
+            </tr>
+          <% }) %>
+        <% } else { %>
+          <tr>
+            <td colspan="8" class="text-center">Tidak ada data</td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <% if (totalPages > 1) { %>
+    <nav>
+      <ul id="pagination" class="pagination justify-content-center flex-wrap">
+        <% for (let p = 1; p <= totalPages; p++) { %>
+          <li class="page-item <%= currentPage === p ? 'active' : '' %>">
+            <a class="page-link" href="/surat?page=<%= p %>&q=<%= searchQuery %>"><%= p %></a>
+          </li>
+        <% } %>
+      </ul>
+    </nav>
+  <% } %>
+</div>
+
+<script>
+    const userRole = "<%= user ? user.role : '' %>";
+async function loadData(page = 1) {
+  const q = document.getElementById('searchInput').value;
+  const limit = document.getElementById('limitSelect').value;
+
+  const res = await fetch(`/surat/data?page=${page}&limit=${limit}&q=${encodeURIComponent(q)}`);
+  const result = await res.json();
+
+  const tbody = document.getElementById('suratBody');
+  tbody.innerHTML = '';
+
+  if (!result.data.length) {
+    tbody.innerHTML = `<tr><td colspan="8" class="text-center">Tidak ada data</td></tr>`;
+  } else {
+    result.data.forEach((s, i) => {
+      const row = `
+        <tr>
+          <td>${(result.currentPage - 1) * result.limit + i + 1}</td>
+          <td>${s.nomor_surat}</td>
+          <td>${s.hal}</td>
+          <td>${s.dari}</td>
+          <td>${s.nama_lengkap}</td>
+          <td>${s.tanggal_surat ? s.tanggal_surat.slice(0,10) : ''}</td>
+          <td>${s.nama_file ? `<a class="btn btn-sm btn-outline-danger" href="/uploads/${s.nama_file}" target="_blank">PDF</a>` : '-'}</td>
+          ${userRole === 'admin' ? `
+            <td>
+              <a href="/surat/edit/${s.id}" class="btn btn-warning btn-sm">✏️</a>
+              <form action="/surat/hapus/${s.id}" method="POST" style="display:inline-block; margin:0; padding:0;">
+                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Yakin hapus data ini?')">🗑️</button>
+              </form>
+            </td>` : ''}
+        </tr>`;
+      tbody.insertAdjacentHTML('beforeend', row);
+    });
+  }
+
+  // pagination
+  const pag = document.getElementById('pagination');
+  pag.innerHTML = '';
+  for (let p = 1; p <= result.totalPages; p++) {
+    pag.innerHTML += `
+      <li class="page-item ${result.currentPage === p ? 'active' : ''}">
+        <button class="page-link" onclick="loadData(${p})">${p}</button>
+      </li>`;
+  }
+}
+
+// --- Sorting manual pada client ---
+let sortState = {}; // simpan ASC/DESC per kolom
+
+document.querySelectorAll("#suratTable thead th").forEach(th => {
+  const colIndex = th.getAttribute("data-col");
+
+  // skip kolom File (6) dan Aksi (7)
+  if (colIndex === "6" || colIndex === "7") return;
+
+  th.style.cursor = "pointer";
+  th.addEventListener("click", () => {
+    const tbody = document.getElementById("suratBody");
+    const rows = Array.from(tbody.querySelectorAll("tr"));
+
+    // toggle asc/desc
+    sortState[colIndex] = sortState[colIndex] === "asc" ? "desc" : "asc";
+    const asc = sortState[colIndex] === "asc";
+
+    // reset semua ikon
+    document.querySelectorAll("#suratTable thead th .sort-icon").forEach(icon => {
+      icon.className = "sort-icon"; // hapus semua kelas fa
+    });
+
+    // set ikon aktif
+    const icon = th.querySelector(".sort-icon");
+    if (asc) {
+      icon.classList.add("fa", "fa-sort-up");
+    } else {
+      icon.classList.add("fa", "fa-sort-down");
+    }
+    // sorting data
+    rows.sort((a, b) => {
+      let aText = a.children[colIndex].innerText.trim();
+      let bText = b.children[colIndex].innerText.trim();
+
+      // parsing tanggal biar benar
+      if (colIndex == "5") {
+        aText = new Date(aText).getTime() || 0;
+        bText = new Date(bText).getTime() || 0;
+      }
+
+      if (!isNaN(aText) && !isNaN(bText)) {
+        return asc ? aText - bText : bText - aText;
+      }
+      return asc ? aText.localeCompare(bText) : bText.localeCompare(aText);
+    });
+
+    // replace tbody dengan hasil sort
+    tbody.innerHTML = "";
+    rows.forEach(r => tbody.appendChild(r));
+  });
+});
+
+
+// Event listeners tetap
+document.getElementById('searchInput').addEventListener('input', () => loadData(1));
+document.getElementById('limitSelect').addEventListener('change', () => loadData(1));
+
+// pertama kali load
+loadData();
+</script>

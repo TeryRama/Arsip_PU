@@ -1,0 +1,136 @@
+<div class="container py-4">
+  <h2 class="mb-4">📩 Tambah Surat</h2>
+
+  <form id="formTambahSurat" action="/surat/tambah" method="POST" enctype="multipart/form-data">
+    <div class="mb-3">
+      <label class="form-label">Nomor Surat</label>
+      <input type="text" name="nomor_surat" class="form-control" required>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Perihal</label>
+      <input type="text" name="hal" class="form-control" required>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Dari</label>
+      <input type="text" name="dari" class="form-control" required>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Jenis Surat</label>
+      <select name="jenis_surat" id="jenis_surat" class="form-select" required>
+        <option value="">-- Pilih Jenis --</option>
+        <option value="masuk">Surat Masuk</option>
+        <option value="keluar">Surat Keluar</option>
+        <option value="lainnya">Lainnya</option>
+      </select>
+    </div>
+
+    <div class="form-group" id="ditujukan-container">
+      <label class="form-label">Ditujukan Kepada</label>
+      <select name="ditujukan_kepada" class="form-select" required>
+        <option value="">-- Pilih User --</option>
+        <% users.forEach(u => { %>
+          <option value="<%= u.id %>"><%= u.nama_lengkap %></option>
+        <% }) %>
+      </select>
+    </div>
+
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Tanggal Surat</label>
+        <input type="date" name="tanggal_surat" class="form-control">
+      </div>
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Tanggal Diterima</label>
+        <input type="date" name="tanggal_diterima" class="form-control">
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Catatan</label>
+      <textarea name="catatan" class="form-control" rows="3"></textarea>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Upload File (PDF)</label>
+      <input type="file" name="file_pdf" class="form-control" accept="application/pdf" required>
+      <small class="text-muted">Hanya file PDF yang diperbolehkan</small>
+    </div>
+
+    <button type="submit" class="btn btn-success">💾 Simpan</button>
+    <a href="/surat" class="btn btn-secondary">Batal</a>
+  </form>
+</div>
+
+<script>
+  // Dinamis "Ditujukan Kepada"
+  const jenisSuratSelect = document.getElementById('jenis_surat');
+  const container = document.getElementById('ditujukan-container');
+
+  jenisSuratSelect.addEventListener('change', function() {
+    if (this.value === 'masuk') {
+      container.innerHTML = `
+        <label class="form-label">Ditujukan Kepada</label>
+        <select name="ditujukan_kepada" class="form-select" required>
+          <option value="">-- Pilih User --</option>
+          <% users.forEach(u => { %>
+            <option value="<%= u.id %>"><%= u.nama_lengkap %></option>
+          <% }) %>
+        </select>
+      `;
+    } else {
+      container.innerHTML = `
+        <label class="form-label">Ditujukan Kepada</label>
+        <input type="text" name="ditujukan_kepada" class="form-control" required>
+      `;
+    }
+  });
+</script>
+
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<!-- Flash message dari server -->
+<script id="flash-data" type="application/json">
+  <%- JSON.stringify({
+    success: typeof success !== 'undefined' ? success : null,
+    error: typeof error !== 'undefined' ? error : null
+  }) %>
+</script>
+
+<script>
+  // ✅ Konfirmasi submit
+  document.getElementById('formTambahSurat').addEventListener('submit', function (e) {
+    e.preventDefault();
+    Swal.fire({
+      title: 'Yakin ingin menyimpan?',
+      text: "Data surat akan ditambahkan ke sistem",
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Ya, simpan',
+      cancelButtonText: 'Batal'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.submit();
+      }
+    });
+  });
+
+  // ✅ Tampilkan notifikasi dari flash message
+  const flashEl = document.getElementById('flash-data');
+  if (flashEl) {
+    try {
+      const flash = JSON.parse(flashEl.textContent);
+      if (flash.success) {
+        Swal.fire({ icon: 'success', title: 'Berhasil', text: flash.success });
+      }
+      if (flash.error) {
+        Swal.fire({ icon: 'error', title: 'Gagal', text: flash.error });
+      }
+    } catch (e) {
+      console.error("Flash JSON error", e);
+    }
+  }
+</script>

@@ -1,0 +1,83 @@
+<div class="container py-4">
+  <h2 class="mb-4">📊 Dashboard Surat</h2>
+
+  <!-- Card Jumlah Surat -->
+  <div class="row">
+    <div class="col-md-6">
+      <div class="card text-white bg-primary mb-3">
+        <div class="card-body">
+          <h5 class="card-title">Surat Masuk</h5>
+          <p class="card-text fs-3"><%= totalMasuk %></p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card text-white bg-success mb-3">
+        <div class="card-body">
+          <h5 class="card-title">Surat Keluar</h5>
+          <p class="card-text fs-3"><%= totalKeluar %></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chart -->
+  <div class="card">
+    <div class="card-body">
+      <h5 class="card-title">Statistik Surat per Bulan</h5>
+      <canvas id="suratChart" width="400" height="200"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Simpan chart data di attribute -->
+<div id="chartWrapper"
+     data-chart='<%- JSON.stringify(chartData) %>'>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+  const wrapper = document.getElementById('chartWrapper');
+  const chartData = JSON.parse(wrapper.dataset.chart);
+
+  const bulanLabels = Array.from(new Set([
+    ...chartData.masuk.map(d => d.bulan),
+    ...chartData.keluar.map(d => d.bulan)
+  ])).sort();
+
+  const masukCounts = bulanLabels.map(b => {
+    const found = chartData.masuk.find(d => d.bulan === b);
+    return found ? parseInt(found.total, 10) : 0;
+  });
+
+  const keluarCounts = bulanLabels.map(b => {
+    const found = chartData.keluar.find(d => d.bulan === b);
+    return found ? parseInt(found.total, 10) : 0;
+  });
+
+  const ctx = document.getElementById('suratChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: bulanLabels,
+      datasets: [
+        {
+          label: 'Surat Masuk',
+          data: masukCounts,
+          borderColor: '#42a5f5',
+          backgroundColor: 'rgba(66,165,245,0.2)',
+          fill: true
+        },
+        {
+          label: 'Surat Keluar',
+          data: keluarCounts,
+          borderColor: '#66bb6a',
+          backgroundColor: 'rgba(102,187,106,0.2)',
+          fill: true
+        }
+      ]
+    }
+  });
+</script>

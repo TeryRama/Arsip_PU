@@ -1,0 +1,59 @@
+<div class="container py-4">
+  <h2 class="mb-4">📊 Dashboard Surat</h2>
+
+  <!-- Card Jumlah Surat -->
+  <div class="row">
+    <div class="col-md-6">
+      <div class="card text-white bg-primary mb-3">
+        <div class="card-body">
+          <h5 class="card-title">Surat Masuk</h5>
+          <p class="card-text fs-3"><%= totalMasuk %></p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card text-white bg-success mb-3">
+        <div class="card-body">
+          <h5 class="card-title">Surat Keluar</h5>
+          <p class="card-text fs-3"><%= totalKeluar %></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chart -->
+  <div class="card">
+    <div class="card-body">
+      <h5 class="card-title">Statistik Surat</h5>
+      <canvas id="suratChart" width="400" height="200"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div id="chartWrapper"
+     data-masuk="<%= totalMasuk %>"
+     data-keluar="<%= totalKeluar %>">
+</div>
+
+<script>
+  const wrapper = document.getElementById('chartWrapper');
+  const totalMasuk = parseInt(wrapper.dataset.masuk, 10);
+  const totalKeluar = parseInt(wrapper.dataset.keluar, 10);
+
+  const ctx = document.getElementById('suratChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Surat Masuk', 'Surat Keluar'],
+      datasets: [{
+        label: 'Jumlah Surat',
+        data: [totalMasuk, totalKeluar],
+        backgroundColor: ['#42a5f5', '#66bb6a']
+      }]
+    }
+  });
+</script>
+

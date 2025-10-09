@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title><%= title || "Dashboard Arsip Surat" %></title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Bootstrap & Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+
+  <!-- SweetAlert & jQuery -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+  <style>
+    body { background: #f4f6f9; margin:0; }
+    .layout-wrapper { min-height: 100vh; display: flex; overflow-x: hidden; }
+
+    /* Sidebar */
+    .sidebar {
+      background: #343a40;
+      color: #fff;
+      padding-top: 20px;
+      width: 220px;
+      flex-shrink: 0;
+      transition: all 0.3s ease;
+    }
+    .sidebar a {
+      color: #adb5bd;
+      text-decoration: none;
+      display: block;
+      padding: 10px 15px;
+      border-radius: 5px;
+      margin-bottom: 5px;
+    }
+    .sidebar a.active, .sidebar a:hover { background: #495057; color: #fff; }
+
+    /* Sidebar hidden (desktop mode) */
+    .sidebar.hidden { margin-left: -220px; }
+
+    /* Overlay (hanya muncul di mobile) */
+    .overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      z-index: 999;
+      opacity: 0;
+      transition: opacity 0.3s ease-in-out;
+    }
+    .overlay.show { display: block; opacity: 1; }
+
+    /* Content */
+    .content-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      transition: margin-left 0.3s ease;
+    }
+
+    .topbar {
+      background:#fff;
+      padding:10px 20px;
+      border-bottom:1px solid #e9ecef;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 1100;
+    }
+    .toggle-btn { cursor: pointer; font-size: 1.4rem; }
+
+    .content { padding: 20px; flex: 1; }
+
+    /* Responsive: sidebar jadi overlay */
+    @media (max-width: 768px) {
+      .layout-wrapper { position: relative; }
+
+      .sidebar {
+        position: fixed;
+        top: 0; 
+        left: -220px;
+        height: 100%;
+        z-index: 1000;
+        transition: left 0.3s ease-in-out;
+      }
+      .sidebar.show { left: 0; }
+
+      /* Kalau sidebar tampil, konten tetap full */
+      .content-wrapper { margin-left: 0 !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout-wrapper">
+    <!-- Sidebar -->
+    <div id="sidebar" class="sidebar p-3">
+      <h5 class="text-white mb-4">📂 Arsip Surat</h5>
+      <ul class="list-unstyled">
+        <% if (user) { %>
+          <li>
+            <% if (user.role === 'admin') { %>
+              <a href="/admin/dashboard" class="<%= (activePage === 'dashboard' ? 'active' : '') %>">
+                <i class="bi bi-house"></i> Dashboard Admin
+              </a>
+            <% } else { %>
+              <a href="/user/dashboard" class="<%= (activePage === 'dashboard' ? 'active' : '') %>">
+                <i class="bi bi-house"></i> Dashboard User
+              </a>
+            <% }} %>
+          </li>
+          <li><a href="/surat/tambah" class="<%= (activePage === 'admin' ? 'active' : '') %>"><i class="bi bi-upload"></i> Upload Surat</a></li>
+          <li><a href="/admin/users" class="<%= (activePage === 'user' ? 'active' : '') %>"><i class="bi bi-people"></i> User</a></li>
+          <li><a href="/surat" class="<%= (activePage === 'surat' ? 'active' : '') %>"><i class="bi bi-envelope"></i> Data Surat</a></li>
+          <li><a href="/arsip" class="<%= (activePage === 'arsip' ? 'active' : '') %>"><i class="bi bi-archive"></i> Arsip</a></li>
+          <li><a href="/logout"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+      </ul>
+    </div>
+
+    <!-- Overlay -->
+    <div id="overlay" class="overlay"></div>
+
+    <!-- Content area -->
+      <div class="content-wrapper">
+      <div class="topbar d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
+        
+        <!-- Kiri: toggle & title -->
+        <div class="d-flex align-items-center gap-3">
+          <span id="toggleSidebar" class="toggle-btn"><i class="bi bi-list"></i></span>
+          <strong><%= title || "Arsip Surat" %></strong>
+        </div>
+
+        <!-- Kanan: user info + notif -->
+        <div class="d-flex align-items-center gap-3">
+          <% if (typeof user !== 'undefined' && user) { %>
+            <small>Hi, <%= user.nama_lengkap %></small>
+          <% } %>
+          <%- include('../partials/notificationBell') %>
+        </div>
+      </div>
+
+      <main class="content">
+        <%- body %>
+      </main>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+    const toggleBtn = document.getElementById('toggleSidebar');
+
+    toggleBtn.addEventListener('click', () => {
+      if (window.innerWidth <= 768) {
+        // Mode mobile: pakai overlay
+        sidebar.classList.toggle('show');
+        overlay.classList.toggle('show');
+      } else {
+        // Mode desktop: sidebar hide/show, konten melebar
+        sidebar.classList.toggle('hidden');
+      }
+    });
+
+    overlay.addEventListener('click', () => {
+      sidebar.classList.remove('show');
+      overlay.classList.remove('show');
+    });
+  </script>
+
+  <script>
+  // Cegah akses ke halaman setelah logout dengan tombol back
+  window.history.pushState(null, '', window.location.href);
+  window.onpopstate = function() {
+    window.history.pushState(null, '', window.location.href);
+  };
+</script>
+
+</body>
+</html>

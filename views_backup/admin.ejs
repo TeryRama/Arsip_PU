@@ -1,0 +1,34 @@
+<!-- views/admin.ejs -->
+<div class="container py-5">
+  <h2 class="mb-4 text-center">📤 Upload Surat Masuk (PDF)</h2>
+
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <form id="uploadForm" action="/upload" method="POST" enctype="multipart/form-data">
+        <div class="mb-3">
+          <label for="nomorSurat" class="form-label">📄 Nomor Surat</label>
+          <input type="text" class="form-control" id="nomorSurat" name="nomor_surat" required>
+        </div>
+        <!-- ... field lain sama seperti sebelumnya ... -->
+        <div class="mb-3">
+          <label for="file" class="form-label">📎 Upload PDF</label>
+          <input class="form-control" type="file" id="file" name="file" accept="application/pdf" required>
+        </div>
+        <div class="d-grid">
+          <button type="submit" class="btn btn-success">Upload Surat</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="text-center mt-4">
+    <a href="/user" class="btn btn-outline-secondary">Lihat Halaman User</a>
+  </div>
+</div>
+
+<script>
+  // Jika mau tetap pakai AJAX upload (opsional) — pastikan route di server menerima multipart/form-data
+  $('#uploadForm').on('submit', function (e) {
+    // optional AJAX logic or remove it to use normal form submit
+  });
+</script>

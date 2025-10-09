@@ -1,0 +1,121 @@
+<div class="container py-4">
+  <h2 class="mb-4">✏️ Edit Surat</h2>
+
+  <form action="/surat/edit/<%= surat.id %>" method="POST" enctype="multipart/form-data">
+    <div class="mb-3">
+      <label class="form-label">Nomor Surat</label>
+      <input type="text" name="nomor_surat" class="form-control" value="<%= surat.nomor_surat %>" required>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Perihal</label>
+      <input type="text" name="hal" class="form-control" value="<%= surat.hal %>" required>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Dari</label>
+      <input type="text" name="dari" class="form-control" value="<%= surat.dari %>" required>
+    </div>
+
+    <div class="form-group">
+      <label for="sifat">Sifat Surat</label>
+      <select name="sifat" class="form-control" required>
+        <option value="">-- Pilih Sifat Surat --</option>
+        <option value="Biasa" <%= surat?.sifat === 'Biasa' ? 'selected' : '' %>>Biasa</option>
+        <option value="Penting" <%= surat?.sifat === 'Penting' ? 'selected' : '' %>>Penting</option>
+        <option value="Segera" <%= surat?.sifat === 'Segera' ? 'selected' : '' %>>Segera</option>
+        <option value="Rahasia" <%= surat?.sifat === 'Rahasia' ? 'selected' : '' %>>Rahasia</option>
+      </select>
+    </div>
+
+    <!-- Kontainer Dinamis Ditujukan Kepada -->
+    <div class="mb-3" id="ditujukan-container">
+      <% if (surat.jenis_surat === 'masuk') { %>
+        <label class="form-label">Ditujukan Kepada</label>
+        <select name="ditujukan_kepada" class="form-select" required>
+          <option value="">-- Pilih User --</option>
+          <% users.forEach(u => { %>
+            <option value="<%= u.id %>" <%= surat.ditujukan_kepada == u.id ? 'selected' : '' %>>
+              <%= u.nama_lengkap %>
+            </option>
+          <% }) %>
+        </select>
+      <% } else { %>
+        <label class="form-label">Ditujukan Kepada</label>
+        <input type="text" name="ditujukan_kepada" class="form-control" 
+               value="<%= surat.ditujukan_kepada %>" required>
+      <% } %>
+    </div>
+
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Tanggal Surat</label>
+        <input type="date" name="tanggal_surat" class="form-control" 
+               value="<%= surat.tanggal_surat ? surat.tanggal_surat.toISOString().split('T')[0] : '' %>">
+      </div>
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Tanggal Diterima</label>
+        <input type="date" name="tanggal_diterima" class="form-control" 
+               value="<%= surat.tanggal_diterima ? surat.tanggal_diterima.toISOString().split('T')[0] : '' %>">
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Jenis Surat</label>
+      <select name="jenis_surat" id="jenis_surat" class="form-select" required>
+        <option value="">-- Pilih Jenis --</option>
+        <option value="masuk" <%= surat.jenis_surat === 'masuk' ? 'selected' : '' %>>Surat Masuk</option>
+        <option value="keluar" <%= surat.jenis_surat === 'keluar' ? 'selected' : '' %>>Surat Keluar</option>
+        <option value="undangan" <%= surat.jenis_surat === 'undangan' ? 'selected' : '' %>>Undangan</option>
+        <option value="lainnya" <%= surat.jenis_surat === 'lainnya' ? 'selected' : '' %>>Lainnya</option>
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Catatan</label>
+      <textarea name="catatan" class="form-control" rows="3"><%= surat.catatan %></textarea>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">File PDF</label>
+      <% if (surat.nama_file) { %>
+        <p>
+          📎 File saat ini: 
+          <a href="/uploads/<%= surat.nama_file %>" target="_blank" class="btn btn-sm btn-outline-danger">Lihat PDF Lama</a>
+        </p>
+      <% } %>
+      <input type="file" name="file_pdf" class="form-control" accept="application/pdf">
+      <small class="text-muted">Kosongkan jika tidak ingin mengganti file</small>
+    </div>
+
+    <button type="submit" class="btn btn-primary">💾 Update</button>
+    <a href="/surat" class="btn btn-secondary">Batal</a>
+  </form>
+</div>
+
+<script>
+  const jenisSuratSelect = document.getElementById('jenis_surat');
+  const container = document.getElementById('ditujukan-container');
+
+  jenisSuratSelect.addEventListener('change', function() {
+    if (this.value === 'masuk') {
+      container.innerHTML = `
+        <label class="form-label">Ditujukan Kepada</label>
+        <select name="ditujukan_kepada" class="form-select" required>
+          <option value="">-- Pilih User --</option>
+          <% users.forEach(u => { %>
+            <option value="<%= u.id %>" <%= surat.ditujukan_kepada == u.id ? 'selected' : '' %>>
+              <%= u.nama_lengkap %>
+            </option>
+          <% }) %>
+        </select>
+      `;
+    } else {
+      container.innerHTML = `
+        <label class="form-label">Ditujukan Kepada</label>
+        <input type="text" name="ditujukan_kepada" class="form-control" 
+               value="<%= surat.nama_user %>" required>
+      `;
+    }
+  });
+</script>
