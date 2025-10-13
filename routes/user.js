@@ -69,16 +69,7 @@ router.get('/user/dashboard', ensureUser, async (req, res) => {
     // mapping ke JSON untuk chart
     const masukData = statistikMasuk.rows.map(r => ({ bulan: r.bulan, total: r.total }));
     const keluarData = statistikKeluar.rows.map(r => ({ bulan: r.bulan, total: r.total }));
-
-    // res.render('user/dashboard2', {
-    //   title: 'Dashboard Surat',
-    //   user: req.session.user,
-    //   totalMasuk,
-    //   totalKeluar,
-    //   chartData: JSON.stringify({ masuk: masukData, keluar: keluarData }),
-    //   layout: req.session.user.role === 'admin' ? 'layouts/admin' : 'layouts/user',
-    //   activePage: 'dashboard'
-    // });
+    
     res.render('user/dashboard2', {
       title: 'Dashboard Surat',
       user: req.session.user,

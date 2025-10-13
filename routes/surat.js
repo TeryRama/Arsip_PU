@@ -150,20 +150,22 @@ router.get('/surat/tambah', ensureLogin, async (req, res) => {
       layout: layoutFile,
       activePage: 'tambah',
       success: req.query.success || null,
-      error: req.query.error || null
+      error: req.query.error || null,
+      alert: null
     });
   } catch (err) {
     console.error('Gagal load form tambah surat:', err);
     res.render('surat/tambah', {
       layout: 'layouts/admin',
       title: 'Tambah Surat',
+      activePage: 'tambah',
       user: req.session.user,
       users: [],
-      error: 'Terjadi kesalahan saat menampilkan form tambah surat.'
+      error: 'Terjadi kesalahan saat menampilkan form tambah surat.',
+      alert: null
     });
   }
 });
-
 
 // ===================== PROSES TAMBAH =====================
 router.post('/surat/tambah', ensureLogin, upload.single('file_pdf'), async (req, res) => {
@@ -171,10 +173,36 @@ router.post('/surat/tambah', ensureLogin, upload.single('file_pdf'), async (req,
   const nama_file = req.file ? req.file.filename : null;
 
   try {
-    // simpan surat
+    // ✅ 1. Cek duplikasi nomor surat (sebelum lanjut)
+    const cek = await pool.query(
+      'SELECT COUNT(*) AS total FROM surat_masuk WHERE nomor_surat = $1',
+      [nomor_surat]
+    );
+
+    if (parseInt(cek.rows[0].total) > 0) {
+      // Ambil ulang daftar user untuk dropdown
+      const users = await pool.query('SELECT id, nama_lengkap FROM users ORDER BY nama_lengkap');
+
+      // ✅ Tampilkan pesan error tanpa masuk ke catch
+      return res.render('surat/tambah', {
+        title: 'Tambah Surat',
+        activePage: 'tambah',
+        alert: {
+          type: 'error',
+          message: `Nomor surat "${nomor_surat}" sudah terdaftar!`
+        },
+        user: req.session.user,
+        users: users.rows,
+        layout: req.session.user.role === 'admin' ? 'layouts/admin' : 'layouts/user',
+        success: null,
+        error: null
+      });
+    }
+
+    // ✅ 2. Simpan surat
     const result = await pool.query(
       `INSERT INTO surat_masuk 
-       (nomor_surat, hal, dari, ditujukan_kepada, tanggal_surat, tanggal_diterima, catatan, nama_file, jenis_surat, sifat, created_at) 
+        (nomor_surat, hal, dari, ditujukan_kepada, tanggal_surat, tanggal_diterima, catatan, nama_file, jenis_surat, sifat, created_at) 
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,NOW())
        RETURNING id`,
       [nomor_surat, hal, dari, ditujukan_kepada, tanggal_surat || null, tanggal_diterima || null, catatan, nama_file, jenis_surat, sifat]
@@ -182,14 +210,14 @@ router.post('/surat/tambah', ensureLogin, upload.single('file_pdf'), async (req,
 
     const suratId = result.rows[0].id;
 
-    // simpan notifikasi ke user yang dituju
+    // ✅ 3. Simpan notifikasi
     await pool.query(
       `INSERT INTO notifications (user_id, surat_id, message, is_read, created_at) 
        VALUES ($1, $2, $3, false, NOW())`,
       [ditujukan_kepada, suratId, `Anda menerima surat baru: ${hal}`]
     );
 
-    // redirect dengan query param supaya bisa dibaca di EJS -> SweetAlert
+    // ✅ 4. Redirect dengan pesan sukses
     res.redirect('/surat/tambah?success=Surat berhasil ditambahkan!');
   } catch (err) {
     console.error('Gagal menambah surat:', err);
@@ -197,11 +225,10 @@ router.post('/surat/tambah', ensureLogin, upload.single('file_pdf'), async (req,
   }
 });
 
-
 // ===================== FORM EDIT =====================
 router.get('/surat/edit/:id', ensureLogin, async (req, res) => {
   try {
-    const result = await pool.query('SELECT a.*,b.nama_lengkap AS nama_user FROM	surat_masuk	a LEFT JOIN users b ON a.ditujukan_kepada = b.ID  WHERE id=$1', [req.params.id]);
+    const result = await pool.query('SELECT a.*,b.nama_lengkap AS nama_user FROM	surat_masuk	a LEFT JOIN users b ON a.ditujukan_kepada = b.ID  WHERE a.id=$1', [req.params.id]);
     const users = await pool.query('SELECT id, nama_lengkap FROM users ORDER BY nama_lengkap ASC');
     if (result.rows.length === 0) return res.status(404).send('Surat tidak ditemukan');
     const layoutFile = req.session.user.role === 'admin' ? 'layouts/admin' : 'layouts/user';

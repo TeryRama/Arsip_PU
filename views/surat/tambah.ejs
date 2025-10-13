@@ -17,6 +17,17 @@
       <input type="text" name="dari" class="form-control" required>
     </div>
 
+    <div class="form-group">
+      <label for="sifat">Sifat Surat</label>
+      <select name="sifat" class="form-control" required>
+        <option value="">-- Pilih Sifat Surat --</option>
+        <option value="Biasa">Biasa</option>
+        <option value="Penting">Penting</option>
+        <option value="Segera">Segera</option>
+        <option value="Rahasia">Rahasia</option>
+      </select>
+    </div>
+
     <div class="mb-3">
       <label class="form-label">Jenis Surat</label>
       <select name="jenis_surat" id="jenis_surat" class="form-select" required>
@@ -88,11 +99,10 @@
     }
   });
 </script>
-
 <!-- SweetAlert2 -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<!-- Flash message dari server -->
+<!-- Flash data dari server -->
 <script id="flash-data" type="application/json">
   <%- JSON.stringify({
     success: typeof success !== 'undefined' ? success : null,
@@ -101,36 +111,54 @@
 </script>
 
 <script>
-  // ✅ Konfirmasi submit
-  document.getElementById('formTambahSurat').addEventListener('submit', function (e) {
-    e.preventDefault();
-    Swal.fire({
-      title: 'Yakin ingin menyimpan?',
-      text: "Data surat akan ditambahkan ke sistem",
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonText: 'Ya, simpan',
-      cancelButtonText: 'Batal'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        this.submit();
-      }
-    });
-  });
-
-  // ✅ Tampilkan notifikasi dari flash message
+document.addEventListener('DOMContentLoaded', function () {
+  const form = document.getElementById('formTambahSurat');
   const flashEl = document.getElementById('flash-data');
+
+  // ✅ Konfirmasi submit
+  if (form) {
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      Swal.fire({
+        title: 'Yakin ingin menyimpan?',
+        text: 'Data surat akan ditambahkan ke sistem',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, simpan',
+        cancelButtonText: 'Batal'
+      }).then(result => {
+        if (result.isConfirmed) {
+          form.submit();
+        }
+      });
+    });
+  }
+
+  // ✅ Notifikasi flash dari server (redirect)
   if (flashEl) {
     try {
       const flash = JSON.parse(flashEl.textContent);
       if (flash.success) {
         Swal.fire({ icon: 'success', title: 'Berhasil', text: flash.success });
-      }
-      if (flash.error) {
+      } else if (flash.error) {
         Swal.fire({ icon: 'error', title: 'Gagal', text: flash.error });
       }
-    } catch (e) {
-      console.error("Flash JSON error", e);
+    } catch (err) {
+      console.error('Flash JSON error:', err);
     }
   }
+
+  // ✅ Notifikasi alert (render langsung di EJS)
+  const alertType = '<%- alert ? alert.type : "" %>';
+  const alertMessage = '<%- alert ? alert.message : "" %>';
+  if (alertType && alertMessage) {
+    Swal.fire({
+      icon: alertType,
+      title: alertType === 'success' ? 'Berhasil!' : 'Gagal!',
+      text: alertMessage,
+      confirmButtonColor: '#3085d6'
+    });
+  }
+});
 </script>
+
