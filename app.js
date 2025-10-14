@@ -90,6 +90,13 @@ app.get('/errors/404', (req, res) => {
 });
 
 // ===================== Start Server =====================
-app.listen(PORT, () => {
-  console.log(`✅ Server berjalan di http://localhost:${PORT}`);
+// app.listen(PORT, () => {
+//   console.log(`✅ Server berjalan di http://localhost:${PORT}`);
+// });
+// const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, '0.0.0.0', () => {
+  console.log('✅ Server berjalan di:');
+  console.log(`➡️  http://localhost:${PORT}  (akses dari PC ini)`);
+  console.log(`➡️  http://192.168.100.151:${PORT}  (akses dari jaringan lain)`);
 });
