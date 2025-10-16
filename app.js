@@ -5,8 +5,28 @@ const session = require('express-session');
 const bodyParser = require('body-parser');
 const expressLayouts = require('express-ejs-layouts');
 
+const pool = require('./db'); 
+
 const app = express();
 const PORT = 3000;
+
+app.get('/test-db', async (req, res) => {
+    try {
+        // Menggunakan objek pool yang sudah di-import dari db.js
+        const result = await pool.query('SELECT NOW()');
+        res.status(200).send(`
+            <h2 style="color: green;">Koneksi Database Berhasil!</h2>
+            <p>Waktu server database saat ini: <strong>${result.rows[0].now}</strong></p>
+            <p>Berhasil terhubung ke database <strong>coba</strong>.</p>
+        `);
+    } catch (err) {
+        console.error('❌ Error saat menguji koneksi DB di /test-db:', err);
+        res.status(500).send(`
+            <h2 style="color: red;">Gagal Konek ke Database!</h2>
+            <p>Terjadi kesalahan saat menjalankan query. Pastikan database <strong>coba</strong> berjalan dan kredensial di <code>db.js</code> sudah benar.</p>
+        `);
+    }
+});
 
 // ===================== Middleware Statis =====================
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

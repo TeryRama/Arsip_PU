@@ -162,4 +162,21 @@ router.post('/admin/users/add', isAdmin, async (req, res) => {
   }
 });
 
+// ===================== SOFT DELETE =====================
+router.post('/admin/user/hapus/:id', isAdmin, async (req, res) => {
+  try {
+    // tandai surat sudah dihapus, tapi file fisik tetap biar bisa recovery
+    await pool.query(
+      'UPDATE users SET deleted_at = NOW() WHERE id = $1',
+      [req.params.id]
+    )
+
+    res.redirect('/admin/users?success=Akun user berhasil dihapus (soft delete).')
+  } catch (err) {
+    console.error('Gagal soft delete akun:', err)
+    res.redirect('/admin/users?error=Terjadi kesalahan saat menghapus Akun.')
+  }
+})
+
+
 module.exports = router;
