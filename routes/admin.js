@@ -113,8 +113,11 @@ router.get('/admin/users', isAdmin, async (req, res) => {
       title: 'Manajemen User',
       activePage: 'users',
       user: req.session.user,
-      userList: result.rows
+      userList: result.rows,
+      success: req.query.success,
+      error: req.query.error
     });
+
   } catch (err) {
     console.error('Gagal ambil user:', err);
     res.status(500).send('Terjadi kesalahan.');
@@ -177,6 +180,65 @@ router.post('/admin/user/hapus/:id', isAdmin, async (req, res) => {
     res.redirect('/admin/users?error=Terjadi kesalahan saat menghapus Akun.')
   }
 })
+
+// ===================== FORM EDIT USER =====================
+router.get('/admin/user/edit/:id', isAdmin, async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM users WHERE id = $1', [req.params.id]);
+
+    if (result.rows.length === 0) {
+      return res.redirect('/admin/users?error=User tidak ditemukan.');
+    }
+
+    res.render('admin/users/edit', {
+      layout: 'layouts/admin',
+      title: 'Edit User',
+      activePage: 'users',
+      user: req.session.user,
+      editUser: result.rows[0]
+    });
+  } catch (err) {
+    console.error('Gagal ambil data user:', err);
+    res.redirect('/admin/users?error=Terjadi kesalahan saat mengambil data user.');
+  }
+});
+
+// ===================== PROSES UPDATE USER =====================
+router.post('/admin/user/edit/:id', isAdmin, async (req, res) => {
+  const { nama_lengkap, username, email, role, is_email_notif_enabled, password } = req.body;
+
+  try {
+    // Jika password diisi, hash baru; jika tidak, tetap pakai lama
+    let query = `
+      UPDATE users 
+      SET nama_lengkap=$1, username=$2, email=$3, role=$4, is_email_notif_enabled=$5, updated_at=NOW()
+    `;
+    const values = [
+      nama_lengkap,
+      username,
+      email || null,
+      role,
+      is_email_notif_enabled === 'on'
+    ];
+
+    if (password && password.trim() !== '') {
+      const bcrypt = require('bcrypt');
+      const hashedPassword = await bcrypt.hash(password, 10);
+      query += `, password=$6 WHERE id=$7`;
+      values.push(hashedPassword, req.params.id);
+    } else {
+      query += ` WHERE id=$6`;
+      values.push(req.params.id);
+    }
+
+    await pool.query(query, values);
+
+    res.redirect('/admin/users?success=Data user berhasil diperbarui.');
+  } catch (err) {
+    console.error('Gagal update user:', err);
+    res.redirect('/admin/users?error=Terjadi kesalahan saat memperbarui user.');
+  }
+});
 
 
 module.exports = router;
